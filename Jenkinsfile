@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        docker { image 'gradle:8.2-jdk17' } // example Linux image with gradle
-    }
+    agent any
     environment {
         //be sure to replace "willbla" with your own Docker Hub username
         DOCKER_IMAGE_NAME = "rehan2019/train-schedule"
@@ -10,7 +8,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Running build automation'
-                sh './gradlew build --no-daemon'
+                bat './gradlew build --no-daemon'
                 archiveArtifacts artifacts: 'dist/trainSchedule.zip'
             }
         }
@@ -22,7 +20,7 @@ pipeline {
                 script {
                     app = docker.build(DOCKER_IMAGE_NAME)
                     app.inside {
-                        sh 'echo Hello, World!'
+                        bat 'echo Hello, World!'
                     }
                 }
             }
