@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Check CMD') {
             steps {
-                bat 'echo Hello, CMD is working'
+                bat 'C:\\Windows\\System32\\cmd.exe /c echo Hello CMD'
             }
         }
         stage('Build') {
