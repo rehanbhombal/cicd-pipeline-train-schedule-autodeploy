@@ -1,8 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker { image 'gradle:8.2-jdk17' } // example Linux image with gradle
+    }
     environment {
         //be sure to replace "willbla" with your own Docker Hub username
-        DOCKER_IMAGE_NAME = "willbla/train-schedule"
+        DOCKER_IMAGE_NAME = "rehan2019/train-schedule"
     }
     stages {
         stage('Build') {
