@@ -5,9 +5,14 @@ pipeline {
         DOCKER_IMAGE_NAME = "rehan2019/train-schedule"
     }
     stages {
-        stage('Check CMD') {
-            steps {
-                bat 'C:\\Windows\\System32\\cmd.exe /c echo Hello CMD'
+        pipeline {
+            agent any
+            stages {
+                stage('Test CMD') {
+                    steps {
+                        bat 'echo Hello CMD works'
+                    }
+                }
             }
         }
         stage('Build') {
