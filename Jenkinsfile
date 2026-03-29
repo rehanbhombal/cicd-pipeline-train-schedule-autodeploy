@@ -1,61 +1,51 @@
 pipeline {
     agent any
     environment {
-        // Replace with your Docker Hub username/repo
+        //be sure to replace "willbla" with your own Docker Hub username
         DOCKER_IMAGE_NAME = "rehan2019/train-schedule"
     }
     stages {
-        stage('Checkout') {
-            steps {
-                echo 'Checking out source code'
-                checkout scm
-            }
-        }
-
         stage('Build') {
             steps {
                 echo 'Running build automation'
-                // Use full path to gradlew.bat to ensure Windows cmd works
-                bat 'C:\\Windows\\System32\\cmd.exe /c gradlew.bat build --no-daemon'
-                archiveArtifacts artifacts: 'dist/trainSchedule.zip', allowEmptyArchive: true
+                bat 'gradlew.bat build --no-daemon'
+                archiveArtifacts artifacts: 'dist/trainSchedule.zip'
             }
         }
-
         stage('Build Docker Image') {
             when {
                 branch 'master'
             }
             steps {
-                echo 'Building Docker image'
-                bat "docker build -t %DOCKER_IMAGE_NAME% ."
+                script {
+                    app = docker.build(DOCKER_IMAGE_NAME)
+                    app.inside {
+                        bat 'echo Hello, World!'
+                    }
+                }
             }
         }
-
         stage('Push Docker Image') {
             when {
                 branch 'master'
             }
             steps {
-                echo 'Pushing Docker image to Docker Hub'
-                withCredentials([usernamePassword(credentialsId: 'docker_hub_login', 
-                                                  usernameVariable: 'DOCKER_USER', 
-                                                  passwordVariable: 'DOCKER_PASS')]) {
-                    bat 'docker login -u %DOCKER_USER% -p %DOCKER_PASS%'
-                    bat "docker push %DOCKER_IMAGE_NAME%:%BUILD_NUMBER%"
-                    bat "docker push %DOCKER_IMAGE_NAME%:latest"
+                script {
+                    docker.withRegistry('https://registry.hub.docker.com', 'docker_hub_login') {
+                        app.push("${env.BUILD_NUMBER}")
+                        app.push("latest")
+                    }
                 }
             }
         }
-
-        stage('Canary Deploy') {
+        stage('CanaryDeploy') {
             when {
                 branch 'master'
             }
-            environment {
+            environment { 
                 CANARY_REPLICAS = 1
             }
             steps {
-                echo 'Deploying Canary to Kubernetes'
                 kubernetesDeploy(
                     kubeconfigId: 'kubeconfig',
                     configs: 'train-schedule-kube-canary.yml',
@@ -63,18 +53,16 @@ pipeline {
                 )
             }
         }
-
-        stage('Deploy to Production') {
+        stage('DeployToProduction') {
             when {
                 branch 'master'
             }
-            environment {
+            environment { 
                 CANARY_REPLICAS = 0
             }
             steps {
                 input 'Deploy to Production?'
                 milestone(1)
-                echo 'Deploying to Production'
                 kubernetesDeploy(
                     kubeconfigId: 'kubeconfig',
                     configs: 'train-schedule-kube-canary.yml',
