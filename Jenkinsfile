@@ -5,16 +5,6 @@ pipeline {
         DOCKER_IMAGE_NAME = "rehan2019/train-schedule"
     }
     stages {
-        pipeline {
-            agent any
-            stages {
-                stage('Test CMD') {
-                    steps {
-                        bat 'echo Hello CMD works'
-                    }
-                }
-            }
-        }
         stage('Build') {
             steps {
                 echo 'Running build automation'
